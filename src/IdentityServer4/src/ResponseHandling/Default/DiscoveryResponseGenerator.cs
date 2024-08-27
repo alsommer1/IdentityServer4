@@ -9,7 +9,6 @@ using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using IdentityServer4.Validation;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -299,7 +298,7 @@ namespace IdentityServer4.ResponseHandling
 
                 entries.Add(OidcConstants.Discovery.TokenEndpointAuthenticationMethodsSupported, types);
             }
-            
+
             var signingCredentials = await Keys.GetSigningCredentialsAsync();
             if (signingCredentials != null)
             {
@@ -359,10 +358,10 @@ namespace IdentityServer4.ResponseHandling
         public virtual async Task<IEnumerable<Models.JsonWebKey>> CreateJwkDocumentAsync()
         {
             var webKeys = new List<Models.JsonWebKey>();
-            
+
             foreach (var key in await Keys.GetValidationKeysAsync())
             {
-                if (key.Key is X509SecurityKey x509Key)
+                if (key.Key is Microsoft.IdentityModel.Tokens.X509SecurityKey x509Key)
                 {
                     var cert64 = Convert.ToBase64String(x509Key.Certificate.RawData);
                     var thumbprint = Base64Url.Encode(x509Key.Certificate.GetCertHash());
@@ -411,7 +410,7 @@ namespace IdentityServer4.ResponseHandling
                         throw new InvalidOperationException($"key type: {x509Key.PublicKey.GetType().Name} not supported.");
                     }
                 }
-                else if (key.Key is RsaSecurityKey rsaKey)
+                else if (key.Key is Microsoft.IdentityModel.Tokens.RsaSecurityKey rsaKey)
                 {
                     var parameters = rsaKey.Rsa?.ExportParameters(false) ?? rsaKey.Parameters;
                     var exponent = Base64Url.Encode(parameters.Exponent);
@@ -429,7 +428,7 @@ namespace IdentityServer4.ResponseHandling
 
                     webKeys.Add(webKey);
                 }
-                else if (key.Key is ECDsaSecurityKey ecdsaKey)
+                else if (key.Key is Microsoft.IdentityModel.Tokens.ECDsaSecurityKey ecdsaKey)
                 {
                     var parameters = ecdsaKey.ECDsa.ExportParameters(false);
                     var x = Base64Url.Encode(parameters.Q.X);
@@ -447,7 +446,7 @@ namespace IdentityServer4.ResponseHandling
                     };
                     webKeys.Add(ecdsaJsonWebKey);
                 }
-                else if (key.Key is JsonWebKey jsonWebKey)
+                else if (key.Key is Microsoft.IdentityModel.Tokens.JsonWebKey jsonWebKey)
                 {
                     var webKey = new Models.JsonWebKey
                     {
